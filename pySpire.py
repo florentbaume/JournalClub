@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-__version__ = "0.2"
+__version__ = "0.3"
 __author__  = "Florent Baume"
 
 import re
@@ -41,14 +41,19 @@ def get_arxiv_data(identifier):
     # Get html source from ArXiv number.
     with urllib.request.urlopen("http://inspirehep.net/search" + query + "&of=hx") as response: htmlSource=response.read().decode("utf-8")
     # Get BibTeX code from html source.
-    bibtexCode=re.search("(^@\w+{\w+:\d+\w+[\S\s]*?^\})",htmlSource, flags = re.MULTILINE)
+    bibtexCode=re.search("(^@[a-zA-Z]+{[a-zA-Z\-]+:\d+\w+[\S\s]*?^\})",htmlSource, flags = re.MULTILINE)
     # Creates dictionary for the record with bibkey entry.
-    ref={"bibkey" : re.search("^@\w+{(\w+:.+),",bibtexCode.group(), flags = re.MULTILINE).group(1) }
-    # Get all entries and add them to dictionary. Removes characters.
-    matches = re.findall("((\w+)\s*=\s*\"([^\"]+)\")",bibtexCode.group(), flags = re.MULTILINE)
-    for m in matches: ref[m[1]]=re.sub( "\n\s+", " ", m[2] ).strip().replace("{","").replace("}","")
+    try:
+        ref={"bibkey" : re.search("^@[a-zA-Z]+{([a-zA-Z\-]+:.+),",bibtexCode.group(), flags = re.MULTILINE).group(1) }
+        # Get all entries and add them to dictionary. Removes characters.
+        matches = re.findall("((\w+)\s*=\s*\"([^\"]+)\")",bibtexCode.group(), flags = re.MULTILINE)
+        for m in matches: 
+            ref[m[1]]=re.sub( "\n\s+", " ", m[2] ).strip().replace("{","").replace("}","")
+        return ref
+    except AttributeError:
+        print("Could not find bibkey for id: "+identifier)
+        return {}
 
-    return ref
 
 
 def retrieve_arxiv_list(fpath):
