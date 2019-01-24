@@ -103,7 +103,7 @@ def get_email_addresses():
     if isinstance(lines,str):
         return lines
     else:
-        return ", ".join(lines)
+        return lines
 
 def sendemail(recipients,subject,body):
     
@@ -114,27 +114,22 @@ def sendemail(recipients,subject,body):
     # Prepares arguments of emails.
     msg = MIMEMultipart()
     msg['From'] = credentials[0]
-    msg['To'] = recipients
+    msg['To'] = ", ".join(recipients)
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'html'))
     text = msg.as_string()
 
     # Sends the emails.
-    print("0")
     server = smtplib.SMTP('smtp.gmail.com', 587, None, 30)
 #    server = smtplib.SMTP_SSL('smtpinterno.uam.es', 587, None, 30)
-    print("1")
     server.ehlo()
     server.starttls()
     server.ehlo()
     print(credentials)
     server.login(*credentials)
     server.set_debuglevel(True)  # show communication with the server
-    print("2")
     server.sendmail(credentials[0], recipients, text)
-    print("3")
     server.quit()
-    print("4")
 
 ###############################################################
 ### DEFAULT VALUES
@@ -206,17 +201,16 @@ coreCheck=query_yes_no(
         "The prepared email has been generated and is the following:\n\n"
         +prepare_email(repString)
         +"\n Do you want to proceed? "
-        , default=None)
-
-        
-
+        , default=None
+)
 
 if coreCheck == "yes":
     addressesCheck=query_yes_no(
         "The above email will be sent to the following recipient(s):\n\n"
-        +get_email_addresses().replace(", ","\n")
+        +"\n".join(get_email_addresses())
         +"\n\nDo you want to proceed? "
         , default=None)
+    print(get_email_addresses())
     if addressesCheck=="yes":
         print("Sending emails...")
         sendemail(get_email_addresses(), repString["title"], prepare_email(repString))
